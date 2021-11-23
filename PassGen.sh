@@ -6,7 +6,7 @@ echo "#     |     ___/\__  \  /  ___//  ___/   \  ____/ __ \ /    \      #"
 echo "#     |    |     / __ \_\___ \ \___ \\     \_\  \  ___/|   |  \     #"
 echo "#     |____|    (____  /____  >____  >\______  /\___  >___|  /     #"
 echo "#                    \/     \/     \/        \/     \/     \/      #"
-echo "#     Developed by Munazir                                    v1.1 #"                                  
+echo "#     Developed by Munazir                                    v1.2 #"                                  
 echo "#     github: github.com/Munazirul/PassGen                         #"
 echo "#                                                                  #"
 echo "####################################################################"
@@ -17,11 +17,22 @@ read output_file
 echo -e "Enter the password length:\c"
 read pass_length
 
+#install openssl
+# function openssl(){
+#     if [[ `command -v openssl` ]];
+#     then
+#         echo ''
+#         else
+#             apt-get install openssl -y >/dev/null 2>&1 
+#     fi          
+# }
+
 #generate password
 function generate(){
     for P in $(seq 1);
 do
-    openssl rand -base64 48 | cut -c3-$pass_length
+    </dev/urandom tr -dc 'A-Za-z0-9@#$%^&*/_+=' | head -c $pass_length
+   # openssl rand -base64 48 | cut -c3-$pass_length
     done > $output_file.txt
     echo "Generating $pass_length digit password"
     sleep 2
@@ -31,8 +42,16 @@ generate
 
 #copy the generated password to clipboard
 function clipboard(){
-
+    if [[ `command -v xclip` ]];
+    then
     cat $output_file.txt | xclip -sel clip
+    else
+        printf "\n\nRequired packages are not installed. Installing it for you.\n\n"
+        sleep 1
+        sudo apt-get install xclip -y >/dev/null 2>&1
+        sleep 2
+        clipboard
+        fi
 }
 
 #write ssmtp file
@@ -49,14 +68,14 @@ FromLineOverride=YES" > /etc/ssmtp/ssmtp.conf
 }
 #configure ssmtp
 function ssmtp_conf(){
-    if [[ `command -v ssmtp` || `command -v mpack` ]];
+    if [[ `command -v ssmtp` && `command -v mpack` ]];
         then 
             ssmtp_write
             else 
             echo "Required packages are not installed. Installing it for you."
             sleep 1
-            sudo bash -c 'apt-get -y install ssmtp -y && apt-get install mpack -y >/dev/null 2>&1 & disown'
-            echo "Required packages are Installed"
+            sudo apt-get -y install ssmtp -y >/dev/null 2>&1 && apt-get install mpack -y >/dev/null 2>&1
+            printf "\n\nRequired packages are Installed\n\n"
             sleep 2
             ssmtp_write
             fi
@@ -74,8 +93,9 @@ enabled less secure app access under 'security' in your google account!"
         read -s password
         ssmtp_conf
         sleep 1
-        mpack -s "Password generated using PassGen for $output_file.txt" $output_file.txt $mail
-        echo "The file containing password has been sent to your gmail"
+        cat $output_file.txt | xclip -sel clip
+        mpack -s "Password generated using PassGen for $output_file" $output_file.txt $mail
+        printf "\n\nThe file containing password has been sent to your gmail\n\n"
         # elif [[ $ynmail == 'n' || $ynmail == 'N' ]]
         # then
         exit 0
@@ -90,13 +110,7 @@ echo -e "Do you want to copy the generated password to clipboard (Y/N) ?: "
 read yn
 if [[ $yn == 'y' || $yn == 'Y' ]]
        then 
-       if [[ `command -v xclip` && `command -v clip` ]];
-       then
-       clipboard
-        else
-            sudo bash -c 'apt-get -y install xclip -y && apt-get install clip -y >/dev/null 2>&1 & disown'
-            clipboard
-            fi
+    clipboard
     echo "Your password has been copied to clipboard"
     exit 0
     elif [[ $yn == 'n' || $yn == 'N' ]]
