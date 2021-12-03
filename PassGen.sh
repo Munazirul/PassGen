@@ -14,7 +14,7 @@ echo ""
 echo ""
 echo -e "Specify the name of output file (for example, if you want to generate the password for discord, enter 'discord'):\c"
 read output_file
-echo -e "Enter the password length:\c"
+echo -e "Enter the password length (By default 12 digit password will be generated if you do not specify the lenght):\c"
 read pass_length
 
 #install openssl
@@ -31,11 +31,19 @@ read pass_length
 function generate(){
     for P in $(seq 1);
 do
-    </dev/urandom tr -dc 'A-Za-z0-9@#$%^&*/_+=' | head -c $pass_length
-   # openssl rand -base64 48 | cut -c3-$pass_length
-    done > $output_file.txt
+    if [[ -z $pass_length ]]
+        then
+        #openssl rand -base64 48 | cut -c1-12 > $output_file.txt
+        </dev/urandom tr -dc 'A-Za-z0-9@#$%^&*/_+=' | head -c 12 > $output_file.txt
+        echo "Generating 12 digit password"
+        sleep 2
+        else
+    </dev/urandom tr -dc 'A-Za-z0-9@#$%^&*/_+=' | head -c $pass_length > $output_file.txt
+    #openssl rand -base64 48 | cut -c1-$pass_length > $output_file.txt
     echo "Generating $pass_length digit password"
     sleep 2
+    fi
+    done 
     echo "Password is generated and saved in $output_file.txt"
 }
 generate
